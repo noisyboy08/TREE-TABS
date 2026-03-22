@@ -22,15 +22,11 @@ Pan, zoom, group, and connect ideas the way you think — powered by **WPF** and
 
 ## Demo
 
-<div align="center">
+<video src="Tree%20Taps%20.mp4" width="100%" controls></video>
 
-A quick walkthrough of Sowser in action *(sound optional — use the player controls)*.
+[Click here to download the video if it doesn't play](./Tree%20Taps%20.mp4)
 
-<video src="tree_tapsview_main/Tree%20Taps%20.mp4" controls playsinline preload="metadata" width="100%" style="max-width: 960px; border-radius: 12px;"></video>
-
-<sub>If the video does not play inline (some hosts block relative media), <a href="tree_tapsview_main/Tree%20Taps%20.mp4"><strong>open or download the MP4</strong></a> from the repo.</sub>
-
-</div>
+**Video file:** GitHub allows at most **100 MB** per file. If `Tree Taps .mp4` is larger, the upload can fail or the README player may not work—compress the video, use [Git LFS](https://git-lfs.com/), or host the clip elsewhere (e.g. YouTube) and link it here instead.
 
 ---
 
