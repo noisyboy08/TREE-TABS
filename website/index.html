@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Sowser — a Windows desktop browser workspace. Download and run locally." />
+  <title>Sowser — Tree Taps</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg0: #0a0f18;
+      --bg1: #121a2b;
+      --accent: #4f8cff;
+      --accent-dim: #2d5aa8;
+      --text: #e8edf7;
+      --muted: #8b98b3;
+      --card: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "DM Sans", system-ui, sans-serif;
+      color: var(--text);
+      background: radial-gradient(120% 80% at 50% -20%, #1a2850 0%, transparent 55%),
+        linear-gradient(165deg, var(--bg0) 0%, var(--bg1) 100%);
+    }
+    .wrap {
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: clamp(2rem, 6vw, 4rem) 1.5rem 3rem;
+    }
+    h1 {
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(2rem, 5vw, 2.75rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.5rem;
+      line-height: 1.15;
+    }
+    .tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    p.lead {
+      font-size: 1.125rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin: 0 0 2rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem 1.5rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 0.75rem;
+    }
+    .card p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    a.btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 1.35rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    a.btn:hover { transform: translateY(-1px); }
+    a.btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+      color: #fff;
+      box-shadow: 0 4px 24px rgba(79, 140, 255, 0.35);
+    }
+    a.btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .note {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    code {
+      font-size: 0.9em;
+      background: rgba(0,0,0,0.35);
+      padding: 0.15em 0.45em;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="tag">Windows desktop</span>
+    <h1>Sowser</h1>
+    <p class="lead">
+      A canvas-style browser workspace built with WPF and WebView2. This site is hosted on the web;
+      the app itself runs only on your PC after you download it.
+    </p>
+
+    <div class="card">
+      <h2>Download</h2>
+      <p>
+        Replace the link below with your <strong>GitHub Releases</strong> asset URL (zip of published build) or Microsoft Store link.
+        Vercel cannot run <code>.exe</code> files for visitors — they download and install locally.
+      </p>
+      <div class="actions">
+        <!-- TODO: set href to your latest release, e.g. https://github.com/you/repo/releases/latest/download/Sowser.zip -->
+        <a class="btn btn-primary" href="#" id="download">Download for Windows</a>
+        <a class="btn btn-ghost" href="https://github.com/" rel="noopener">Source / releases</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Requirements</h2>
+      <p>Windows 10 or 11, 64-bit. WebView2 Runtime (usually already installed with Edge). .NET 8 if you distribute framework-dependent builds.</p>
+    </div>
+
+    <p class="note">
+      <strong>Deploy this folder to Vercel:</strong> create a project, set the root directory to <code>website</code>,
+      framework “Other”, no build command. Publish the desktop app separately (e.g. <code>dotnet publish -c Release</code>
+      then zip the output) and attach it to GitHub Releases.
+    </p>
+  </div>
+  <script>
+    (function () {
+      var d = document.getElementById("download");
+      if (d && d.getAttribute("href") === "#") {
+        d.addEventListener("click", function (e) {
+          e.preventDefault();
+          alert("Set the download button href in website/index.html to your release ZIP URL.");
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

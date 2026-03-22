@@ -1,0 +1,94 @@
+﻿<Application x:Class="Sowser.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Blue" SecondaryColor="Teal"/>
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign2.Defaults.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            
+            <!-- Modern Card Shadow Styles -->
+            <DropShadowEffect x:Key="CardShadow1" BlurRadius="8" ShadowDepth="2" Opacity="0.15" Direction="270"/>
+            <DropShadowEffect x:Key="CardShadow2" BlurRadius="16" ShadowDepth="4" Opacity="0.2" Direction="270"/>
+            <DropShadowEffect x:Key="CardShadow3" BlurRadius="24" ShadowDepth="8" Opacity="0.25" Direction="270"/>
+            <DropShadowEffect x:Key="CardShadowHover" BlurRadius="32" ShadowDepth="12" Opacity="0.3" Direction="270"/>
+            
+            <!-- Colors -->
+            <Color x:Key="CanvasBackgroundColor">#F5F5F5</Color>
+            <Color x:Key="CardBackgroundColor">#FFFFFF</Color>
+            <Color x:Key="StickyNoteColor">#FFF9C4</Color>
+            <Color x:Key="ConnectionLineColor">#4A90D9</Color>
+            <Color x:Key="GridDotColor">#E0E0E0</Color>
+            
+            <SolidColorBrush x:Key="CanvasBackgroundBrush" Color="{StaticResource CanvasBackgroundColor}"/>
+            <SolidColorBrush x:Key="CardBackgroundBrush" Color="{StaticResource CardBackgroundColor}"/>
+            <SolidColorBrush x:Key="StickyNoteBrush" Color="{StaticResource StickyNoteColor}"/>
+            <SolidColorBrush x:Key="ConnectionLineBrush" Color="{StaticResource ConnectionLineColor}"/>
+            <SolidColorBrush x:Key="GridDotBrush" Color="{StaticResource GridDotColor}"/>
+            
+            <!-- Gradient for connection arrows -->
+            <LinearGradientBrush x:Key="ConnectionGradient" StartPoint="0,0" EndPoint="1,0">
+                <GradientStop Color="#4A90D9" Offset="0"/>
+                <GradientStop Color="#26A69A" Offset="1"/>
+            </LinearGradientBrush>
+            
+            <!-- Modern Button Style -->
+            <Style x:Key="ModernButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+                <Setter Property="Padding" Value="16,8"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="FontWeight" Value="Medium"/>
+                <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+            </Style>
+            
+            <Style x:Key="PrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                <Setter Property="Padding" Value="16,8"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+                <Setter Property="materialDesign:ElevationAssist.Elevation" Value="Dp2"/>
+            </Style>
+            
+            <Style x:Key="IconButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                <Setter Property="Width" Value="36"/>
+                <Setter Property="Height" Value="36"/>
+                <Setter Property="Padding" Value="6"/>
+            </Style>
+            
+            <!-- Toolbar Style -->
+            <Style x:Key="ToolbarStyle" TargetType="Border">
+                <Setter Property="Background" Value="White"/>
+                <Setter Property="Effect" Value="{StaticResource CardShadow1}"/>
+                <Setter Property="Padding" Value="12,8"/>
+            </Style>
+            
+            <!-- Glass Effect Style -->
+            <Style x:Key="GlassStyle" TargetType="Border">
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <SolidColorBrush Color="White" Opacity="0.85"/>
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="CornerRadius" Value="12"/>
+                <Setter Property="Effect" Value="{StaticResource CardShadow2}"/>
+            </Style>
+            
+            <!-- Sidebar Button Style -->
+            <Style x:Key="SidebarButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                <Setter Property="Padding" Value="12,10"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="Height" Value="Auto"/>
+                <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="#E0FFFFFF"/>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource MaterialDesign.Brush.TextBox.HoverBackground}"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,1017 @@
+<Window x:Class="Sowser.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="Sowser" Height="800" Width="1200"
+        WindowStartupLocation="CenterScreen"
+        TextElement.Foreground="#FFFFFF"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="13"
+        FontFamily="Segoe UI"
+        Background="#0A0A0F">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome GlassFrameThickness="-1" CaptionHeight="32" CornerRadius="0" ResizeBorderThickness="8" />
+    </WindowChrome.WindowChrome>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Custom caption: background synced with canvas theme in code-behind -->
+        <Grid x:Name="ChromeCaptionBar" Grid.Row="0" Background="#0A0A0F">
+            <Grid.Resources>
+                <Style x:Key="CaptionChromeButtonStyle" TargetType="Button">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                    <Setter Property="Cursor" Value="Hand"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="ChromeBtnBg" Background="{TemplateBinding Background}" Padding="0">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="ChromeBtnBg" Property="Background" Value="#33FFFFFF"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+                <Style x:Key="CaptionCloseButtonStyle" TargetType="Button">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                    <Setter Property="Cursor" Value="Hand"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="CloseBtnBg" Background="Transparent" Padding="0">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="CloseBtnBg" Property="Background" Value="#E81123"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Grid.Resources>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Background="Transparent" MouseLeftButtonDown="WindowCaptionBar_MouseLeftButtonDown">
+                <TextBlock Text="Sowser" VerticalAlignment="Center" Margin="14,0,0,0"
+                           Foreground="#B3FFFFFF" FontSize="12"/>
+            </Border>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button x:Name="CaptionMinimizeButton" Click="CaptionMinimize_Click"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CaptionChromeButtonStyle}"
+                        Width="46" Height="32" ToolTip="Minimize">
+                    <materialDesign:PackIcon Kind="WindowMinimize" Width="14" Height="14"/>
+                </Button>
+                <Button x:Name="CaptionMaximizeButton" Click="CaptionMaxRestore_Click"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CaptionChromeButtonStyle}"
+                        Width="46" Height="32" ToolTip="Maximize">
+                    <materialDesign:PackIcon x:Name="CaptionMaximizeIcon" Kind="WindowMaximize" Width="14" Height="14"/>
+                </Button>
+                <Button x:Name="CaptionCloseButton" Click="CaptionClose_Click"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{StaticResource CaptionCloseButtonStyle}"
+                        Width="46" Height="32" ToolTip="Close">
+                    <materialDesign:PackIcon Kind="Close" Width="14" Height="14"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <Grid x:Name="MainContentShellGrid" Grid.Row="1" Background="#0A0A0F">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="90"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Shell background matches canvas theme (ApplyCanvasTheme) -->
+        <Border Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Center" Width="60" Margin="16,16,8,16" Padding="0,10,0,10" CornerRadius="30" Background="#15FFFFFF" BorderBrush="#35FFFFFF" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Menu Toggle Logo -->
+                <Button Grid.Row="0" Style="{StaticResource MaterialDesignIconButton}" 
+                        Margin="0" Width="40" Height="40"
+                        Foreground="#00D9FF" Click="ToggleSidebar_Click" ToolTip="Menu">
+                    <materialDesign:PackIcon x:Name="MenuIcon" Kind="Layers" Width="26" Height="26"/>
+                </Button>
+                
+                <!-- Main Nav Icons -->
+                <StackPanel x:Name="MainNavIcons" Visibility="Collapsed" Grid.Row="1" VerticalAlignment="Top" Margin="0,8,0,0">
+                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                            Width="44" Height="44" Margin="0,4"
+                            Foreground="#80FFFFFF" Click="NewCard_Click" ToolTip="New Card">
+                        <materialDesign:PackIcon Kind="Web" Width="22" Height="22"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                            Width="44" Height="44" Margin="0,4"
+                            Foreground="#80FFFFFF" Click="NewStickyNote_Click" ToolTip="New Sticky Note">
+                        <materialDesign:PackIcon Kind="NotePlusOutline" Width="22" Height="22"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                            Width="44" Height="44" Margin="0,4"
+                            Foreground="#80FFFFFF" Click="OrganizeGrid_Click" ToolTip="Organize (Grid)">
+                        <materialDesign:PackIcon Kind="ViewGridOutline" Width="22" Height="22"/>
+                    </Button>
+
+                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                            Width="44" Height="44" Margin="0,4"
+                            Foreground="#00D9FF" Click="AIOrganize_Click" ToolTip="AI Smart Organize">
+                        <materialDesign:PackIcon Kind="AutoFix" Width="22" Height="22"/>
+                    </Button>
+
+                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                            Width="44" Height="44" Margin="0,4"
+                            Foreground="#80FFFFFF" Click="ToggleBookmarks_Click" ToolTip="Bookmarks">
+                        <materialDesign:PackIcon Kind="StarOutline" Width="22" Height="22"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                            Width="44" Height="44" Margin="0,4"
+                            Foreground="#80FFFFFF" Click="ToggleHistory_Click" ToolTip="History">
+                        <materialDesign:PackIcon Kind="History" Width="22" Height="22"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                            Width="44" Height="44" Margin="0,4"
+                            Foreground="#80FFFFFF" Click="ToggleDownloads_Click" ToolTip="Downloads">
+                        <materialDesign:PackIcon Kind="Download" Width="22" Height="22"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                            Width="44" Height="44" Margin="0,4"
+                            Foreground="#80FFFFFF" Click="ToggleReadLater_Click" ToolTip="Read later">
+                        <materialDesign:PackIcon Kind="ClockOutline" Width="22" Height="22"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                            Width="44" Height="44" Margin="0,4"
+                            Foreground="#80FFFFFF" Click="FitAllCards_Click" ToolTip="Fit All">
+                        <materialDesign:PackIcon Kind="FitToScreen" Width="22" Height="22"/>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                            Width="44" Height="44" Margin="0,4"
+                            Foreground="#80FFFFFF" Click="ResetView_Click" ToolTip="Reset View">
+                        <materialDesign:PackIcon Kind="Restore" Width="22" Height="22"/>
+                    </Button>
+                </StackPanel>
+                
+                <!-- Bottom Icons -->
+                <StackPanel x:Name="BottomNavIcons" Visibility="Collapsed" Grid.Row="2" VerticalAlignment="Bottom" Margin="0,0,0,16">
+                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                            Width="44" Height="44" Margin="0,4"
+                            Foreground="#80FFFFFF" Click="ToggleSettings_Click" ToolTip="Settings">
+                        <materialDesign:PackIcon Kind="CogOutline" Width="22" Height="22"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Top Toolbar Row: background matches canvas so header is not flat black -->
+            <Grid Grid.Row="0" Margin="0,12,0,8" Background="Transparent">
+                <!-- Centered Search Pill -->
+                <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Margin="0,4,0,0" CornerRadius="30"
+                        Background="#15FFFFFF" BorderBrush="#35FFFFFF" BorderThickness="1">
+                    <StackPanel Margin="16,8,16,8">
+                        <!-- Search Bar -->
+                        <Border HorizontalAlignment="Center" Width="560"
+                                Background="#18FFFFFF" CornerRadius="20" Padding="0"
+                                BorderBrush="#40FFFFFF" BorderThickness="1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Kind="Magnify" Grid.Column="0"
+                                                         Width="18" Height="18"
+                                                         VerticalAlignment="Center" Margin="16,0,8,0"
+                                                         Foreground="#80FFFFFF"/>
+                                <TextBox x:Name="MainUrlBar" Grid.Column="1"
+                                         BorderThickness="0" Background="Transparent"
+                                         VerticalContentAlignment="Center"
+                                         Padding="0,12,16,12" FontSize="14"
+                                         Foreground="#FFFFFF" CaretBrush="#FFFFFF"
+                                         KeyDown="MainUrlBar_KeyDown"
+                                         materialDesign:HintAssist.Hint="Search or enter URL..."
+                                         materialDesign:HintAssist.Foreground="#70FFFFFF"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Quick Links -->
+                        <StackPanel x:Name="QuickLinksPanel" HorizontalAlignment="Center"
+                                    Orientation="Horizontal" Margin="0,12,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ≡ Hamburger Menu Button — top right -->
+                <Border HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Margin="0,4,20,0" CornerRadius="22"
+                        Background="#18FFFFFF" BorderBrush="#35FFFFFF" BorderThickness="1"
+                        Width="44" Height="44">
+                    <Button x:Name="MainMenuButton"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            Click="MainMenuButton_Click"
+                            ToolTip="Browser Menu"
+                            Width="44" Height="44"
+                            Foreground="#E0FFFFFF">
+                        <materialDesign:PackIcon Kind="Menu" Width="22" Height="22"/>
+                    </Button>
+                </Border>
+
+                <!-- Main Browser Menu Popup -->
+                <Popup x:Name="MainBrowserMenuPopup"
+                       PlacementTarget="{Binding ElementName=MainMenuButton}"
+                       Placement="Bottom"
+                       StaysOpen="False"
+                       AllowsTransparency="True"
+                       PopupAnimation="Fade"
+                       HorizontalOffset="-170"
+                       Panel.ZIndex="500">
+                    <Border Background="#0C0C10"
+                            BorderBrush="#28FFFFFF" BorderThickness="1"
+                            CornerRadius="12" Width="270">
+                        <Border.Effect>
+                            <DropShadowEffect Color="#000000" BlurRadius="30" ShadowDepth="8" Opacity="0.8"/>
+                        </Border.Effect>
+                        <!-- Scrollable to handle long lists -->
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="680" PanningMode="VerticalOnly">
+                            <StackPanel Margin="4,6,4,8">
+
+                                <!-- ─── GROUP 1: NEW ─── -->
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_NewBrowser_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="PlusBoxOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="New tab" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <TextBlock Grid.Column="2" Text="Ctrl+T" Foreground="#50FFFFFF" FontSize="11" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_NewWindow_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="OpenInNew" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="New window" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <TextBlock Grid.Column="2" Text="Ctrl+N" Foreground="#50FFFFFF" FontSize="11" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_NewPrivate_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="Incognito" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="New private window" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <TextBlock Grid.Column="2" Text="Ctrl+Shift+N" Foreground="#50FFFFFF" FontSize="11" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
+
+                                <Separator Margin="6,5" Background="#20FFFFFF"/>
+
+                                <!-- ─── GROUP 2: STICKY / NOTES ─── -->
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="NewStickyNote_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="NotePlusOutline" Width="16" Height="16" VerticalAlignment="Center" Foreground="#FFD93D"/>
+                                        <TextBlock Grid.Column="1" Text="New Sticky Note" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                    </Grid>
+                                </Button>
+
+                                <Separator Margin="6,5" Background="#20FFFFFF"/>
+
+                                <!-- ─── GROUP 3: SIDEBAR TOGGLE ─── -->
+                                <Border Margin="4,2" Padding="14,0" Height="40">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="PageLayoutSidebarLeft" Width="16" Height="16" VerticalAlignment="Center" Foreground="#E8FFFFFF"/>
+                                        <TextBlock Grid.Column="1" Text="Sidebar" VerticalAlignment="Center" FontSize="13" Foreground="#E8FFFFFF" Margin="10,0,0,0"/>
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                            <Button x:Name="SidebarOnBtn" Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Click="MenuMain_SidebarOn_Click"
+                                                    Height="26" Padding="6,0" FontSize="11" Foreground="#90FFFFFF"
+                                                    Background="#20FFFFFF" MinWidth="0">On</Button>
+                                            <Button x:Name="SidebarOffBtn" Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Click="MenuMain_SidebarOff_Click"
+                                                    Height="26" Padding="6,0" FontSize="11" Foreground="#90FFFFFF"
+                                                    Background="#7000D9FF" MinWidth="0" Margin="1,0,0,0">Off</Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <Separator Margin="6,5" Background="#20FFFFFF"/>
+
+                                <!-- ─── GROUP 4: BROWSER DATA ─── -->
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_Passwords_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="KeyOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Passwords and autofill" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronRight" Width="14" Height="14" VerticalAlignment="Center" Foreground="#50FFFFFF"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_History_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="History" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="History" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronRight" Width="14" Height="14" VerticalAlignment="Center" Foreground="#50FFFFFF"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_Bookmarks_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="BookmarkOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Bookmarks and lists" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronRight" Width="14" Height="14" VerticalAlignment="Center" Foreground="#50FFFFFF"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_Downloads_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="DownloadOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Downloads" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <TextBlock Grid.Column="2" Text="Ctrl+J" Foreground="#50FFFFFF" FontSize="11" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_ReadLater_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="ClockOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Read later queue" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_GlobalFind_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="TextSearch" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Find on canvas" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <TextBlock Grid.Column="2" Text="Ctrl+Shift+F" Foreground="#50FFFFFF" FontSize="11" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_Extensions_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="PuzzleOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Extensions" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronRight" Width="14" Height="14" VerticalAlignment="Center" Foreground="#50FFFFFF"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_DeleteData_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="TrashCanOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Delete browsing data..." VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <TextBlock Grid.Column="2" Text="Ctrl+Shift+Del" Foreground="#50FFFFFF" FontSize="11" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
+
+                                <Separator Margin="6,5" Background="#20FFFFFF"/>
+
+                                <!-- ─── GROUP 5: ZOOM ROW ─── -->
+                                <Border Margin="4,2" Padding="14,0" Height="42">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="22"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="MagnifyPlusOutline" Width="16" Height="16" VerticalAlignment="Center" Foreground="#E8FFFFFF"/>
+                                        <TextBlock Grid.Column="1" Text="Zoom" VerticalAlignment="Center" FontSize="13" Foreground="#E8FFFFFF" Margin="10,0,0,0"/>
+                                        <Button Grid.Column="2" Style="{StaticResource MaterialDesignIconButton}"
+                                                Click="MenuMain_ZoomOut_Click" Width="28" Height="28" Foreground="#E8FFFFFF" MinWidth="0">
+                                            <materialDesign:PackIcon Kind="Minus" Width="13" Height="13"/>
+                                        </Button>
+                                        <TextBlock x:Name="MainMenuZoomLabel" Grid.Column="3" Text="100%"
+                                                   Foreground="#E8FFFFFF" FontSize="12" VerticalAlignment="Center"
+                                                   Margin="4,0" Width="38" TextAlignment="Center"/>
+                                        <Button Grid.Column="4" Style="{StaticResource MaterialDesignIconButton}"
+                                                Click="MenuMain_ZoomIn_Click" Width="28" Height="28" Foreground="#E8FFFFFF" MinWidth="0">
+                                            <materialDesign:PackIcon Kind="Plus" Width="13" Height="13"/>
+                                        </Button>
+                                        <Button Grid.Column="5" Style="{StaticResource MaterialDesignIconButton}"
+                                                Click="MenuMain_ZoomFit_Click" Width="28" Height="28" Foreground="#E8FFFFFF" MinWidth="0">
+                                            <materialDesign:PackIcon Kind="Fullscreen" Width="13" Height="13"/>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+
+                                <Separator Margin="6,5" Background="#20FFFFFF"/>
+
+                                <!-- ─── GROUP 6: PAGE TOOLS ─── -->
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_Print_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="PrinterOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Print..." VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <TextBlock Grid.Column="2" Text="Ctrl+P" Foreground="#50FFFFFF" FontSize="11" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_FindEdit_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="FileSearchOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Find and edit" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronRight" Width="14" Height="14" VerticalAlignment="Center" Foreground="#50FFFFFF"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_SaveShare_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="ShareVariantOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Save and share" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronRight" Width="14" Height="14" VerticalAlignment="Center" Foreground="#50FFFFFF"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_MoreTools_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="WrenchOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="More tools" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronRight" Width="14" Height="14" VerticalAlignment="Center" Foreground="#50FFFFFF"/>
+                                    </Grid>
+                                </Button>
+
+                                <Separator Margin="6,5" Background="#20FFFFFF"/>
+
+                                <!-- ─── GROUP 7: WORKSPACE ─── -->
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_Organize_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="ViewGridOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Organize Grid" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="AIOrganize_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="AutoFix" Width="16" Height="16" VerticalAlignment="Center" Foreground="#B233FF"/>
+                                        <TextBlock Grid.Column="1" Text="AI Smart Organize" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="SaveWorkspace_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="ContentSaveOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Save Workspace" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="LoadWorkspace_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="FolderOpenOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Load Workspace" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                    </Grid>
+                                </Button>
+
+                                <Separator Margin="6,5" Background="#20FFFFFF"/>
+
+                                <!-- ─── GROUP 8: HELP / EXIT ─── -->
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_Help_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="HelpCircleOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Help" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0"/>
+                                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronRight" Width="14" Height="14" VerticalAlignment="Center" Foreground="#50FFFFFF"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_Settings_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="CogOutline" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Settings" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0" Foreground="#FF8A65"/>
+                                    </Grid>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                        Click="MenuMain_Exit_Click" HorizontalContentAlignment="Left"
+                                        Height="38" Padding="14,0" Foreground="#E8FFFFFF" Margin="0,1">
+                                    <Grid Width="238">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0" Kind="ExitToApp" Width="16" Height="16" VerticalAlignment="Center" Foreground="#FF6B6B"/>
+                                        <TextBlock Grid.Column="1" Text="Exit" VerticalAlignment="Center" FontSize="13" Margin="10,0,0,0" Foreground="#FF6B6B"/>
+                                    </Grid>
+                                </Button>
+
+                                <Border Height="4"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Popup>
+            </Grid>
+
+            <!-- Canvas Area -->
+            <Grid Grid.Row="1">
+                <!-- Sidebar Panel (slides over canvas) -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Sidebar Content -->
+                    <Border x:Name="SidebarPanel" Grid.Column="0" Width="280"
+                            Background="#25FFFFFF" BorderBrush="#30FFFFFF" BorderThickness="0,0,1,0"
+                            Visibility="Collapsed">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Sidebar Header -->
+                            <Border Grid.Row="0" Padding="16,14" 
+                                    BorderBrush="#20FFFFFF" BorderThickness="0,0,0,1">
+                                <Grid>
+                                    <TextBlock x:Name="SidebarTitle" Text="Bookmarks" 
+                                               FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <Button HorizontalAlignment="Right" Click="CloseSidebar_Click"
+                                            Style="{StaticResource MaterialDesignIconButton}"
+                                            Width="28" Height="28" Foreground="#80FFFFFF">
+                                        <materialDesign:PackIcon Kind="Close" Width="16" Height="16"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Sidebar Content Panels -->
+                            <Grid Grid.Row="1">
+                                <ScrollViewer x:Name="BookmarksPanel" Visibility="Collapsed">
+                                    <StackPanel x:Name="BookmarksList" Margin="12"/>
+                                </ScrollViewer>
+
+                                <ScrollViewer x:Name="ReadLaterPanel" Visibility="Collapsed">
+                                    <StackPanel x:Name="ReadLaterList" Margin="12"/>
+                                </ScrollViewer>
+                                
+                                <Grid x:Name="HistoryPanel" Visibility="Collapsed">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Border Grid.Row="0" Margin="12" Background="#20FFFFFF" CornerRadius="8" BorderBrush="#30FFFFFF" BorderThickness="1">
+                                        <Grid>
+                                            <materialDesign:PackIcon Kind="Magnify" Width="16" Height="16"
+                                                                     VerticalAlignment="Center" Margin="10,0,0,0"
+                                                                     Foreground="#80FFFFFF"/>
+                                            <TextBox x:Name="HistorySearchBox" 
+                                                     BorderThickness="0" Background="Transparent"
+                                                     Padding="32,8,12,8" FontSize="13"
+                                                     Foreground="#FFFFFF" CaretBrush="#FFFFFF"
+                                                     materialDesign:HintAssist.Hint="Search history..."
+                                                     materialDesign:HintAssist.Foreground="#60FFFFFF"
+                                                     TextChanged="HistorySearchBox_TextChanged"/>
+                                        </Grid>
+                                    </Border>
+                                    <ScrollViewer Grid.Row="1">
+                                        <StackPanel x:Name="HistoryList" Margin="12,0,12,12"/>
+                                    </ScrollViewer>
+                                </Grid>
+                                
+                                <ScrollViewer x:Name="DownloadsPanel" Visibility="Collapsed">
+                                    <StackPanel x:Name="DownloadsList" Margin="12"/>
+                                </ScrollViewer>
+                                
+                                <ScrollViewer x:Name="SettingsPanel" Visibility="Collapsed">
+                                    <StackPanel Margin="16">
+                                        <TextBlock Text="Search Engine" FontWeight="Medium" 
+                                                   Foreground="#FFFFFF" Margin="0,0,0,8"/>
+                                        <ComboBox x:Name="SearchEngineCombo" SelectedIndex="0" Margin="0,0,0,20"
+                                                  SelectionChanged="SearchEngineCombo_SelectionChanged"
+                                                  Foreground="#FFFFFF">
+                                            <ComboBoxItem Content="Google"/>
+                                            <ComboBoxItem Content="Bing"/>
+                                            <ComboBoxItem Content="DuckDuckGo"/>
+                                        </ComboBox>
+
+                                        <CheckBox x:Name="AutoSaveToggle" Content="Auto-save workspace" 
+                                                  IsChecked="True" Margin="0,0,0,20" Foreground="#FFFFFF"
+                                                  Checked="AutoSaveCheckbox_Changed" Unchecked="AutoSaveCheckbox_Changed"/>
+
+                                        <!-- Feature #9: Canvas Background Themes -->
+                                        <TextBlock Text="Canvas Background" FontWeight="Medium" 
+                                                   Foreground="#FFFFFF" Margin="0,0,0,8"/>
+                                        <WrapPanel Margin="0,0,0,16">
+                                            <Border x:Name="BgThemeDark" Width="48" Height="32" Margin="0,0,6,6"
+                                                    Background="#0A0A0F" CornerRadius="6"
+                                                    BorderBrush="#00D9FF" BorderThickness="2"
+                                                    Cursor="Hand" ToolTip="Dark (Default)"
+                                                    MouseLeftButtonDown="BgTheme_Click" Tag="dark"/>
+                                            <Border x:Name="BgThemeDots" Width="48" Height="32" Margin="0,0,6,6"
+                                                    Background="#0D1117" CornerRadius="6"
+                                                    BorderBrush="#35FFFFFF" BorderThickness="1"
+                                                    Cursor="Hand" ToolTip="Dot Grid"
+                                                    MouseLeftButtonDown="BgTheme_Click" Tag="dots">
+                                                <TextBlock Text="· · ·" Foreground="#30FFFFFF" FontSize="8"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <Border x:Name="BgThemeGrid" Width="48" Height="32" Margin="0,0,6,6"
+                                                    Background="#0A1628" CornerRadius="6"
+                                                    BorderBrush="#35FFFFFF" BorderThickness="1"
+                                                    Cursor="Hand" ToolTip="Blueprint Grid"
+                                                    MouseLeftButtonDown="BgTheme_Click" Tag="grid">
+                                                <TextBlock Text="⊞" Foreground="#30FFFFFF" FontSize="12"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <Border x:Name="BgThemePurple" Width="48" Height="32" Margin="0,0,6,6"
+                                                    CornerRadius="6" BorderBrush="#35FFFFFF" BorderThickness="1"
+                                                    Cursor="Hand" ToolTip="Purple Gradient"
+                                                    MouseLeftButtonDown="BgTheme_Click" Tag="purple">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                        <GradientStop Color="#0D0720" Offset="0"/>
+                                                        <GradientStop Color="#1A0533" Offset="1"/>
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
+                                            </Border>
+                                            <Border x:Name="BgThemeOcean" Width="48" Height="32" Margin="0,0,6,6"
+                                                    CornerRadius="6" BorderBrush="#35FFFFFF" BorderThickness="1"
+                                                    Cursor="Hand" ToolTip="Ocean Depth"
+                                                    MouseLeftButtonDown="BgTheme_Click" Tag="ocean">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                        <GradientStop Color="#020B18" Offset="0"/>
+                                                        <GradientStop Color="#041E42" Offset="1"/>
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
+                                            </Border>
+                                        </WrapPanel>
+
+                                        <!-- Feature #3: Group Management -->
+                                        <TextBlock Text="Card Groups" FontWeight="Medium" 
+                                                   Foreground="#FFFFFF" Margin="0,0,0,8"/>
+                                        <StackPanel x:Name="GroupManagementPanel" Margin="0,0,0,12"/>
+                                        <Button Content="+ New Group" Click="CreateGroup_Click"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                Foreground="#00D9FF" BorderBrush="#00D9FF"
+                                                HorizontalAlignment="Stretch" Margin="0,0,0,16"/>
+
+                                        <Button Content="Save Workspace" Click="SaveWorkspace_Click"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                Foreground="#00D9FF" BorderBrush="#00D9FF"
+                                                HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
+                                        <Button Content="Load Workspace" Click="LoadWorkspace_Click"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                Foreground="#00D9FF" BorderBrush="#00D9FF"
+                                                HorizontalAlignment="Stretch" Margin="0,0,0,12"/>
+
+                                        <TextBlock Text="Session &amp; profiles" FontWeight="Medium" Foreground="#FFFFFF" Margin="0,0,0,8"/>
+                                        <ComboBox x:Name="SessionRestoreCombo" Foreground="#FFFFFF" Margin="0,0,0,8"
+                                                  SelectionChanged="SessionRestoreCombo_SelectionChanged"
+                                                  ToolTip="Restore last autosave on startup">
+                                            <ComboBoxItem Content="Ask to restore session" Tag="Prompt"/>
+                                            <ComboBoxItem Content="Restore session silently" Tag="Silent"/>
+                                            <ComboBoxItem Content="Do not restore session" Tag="Off"/>
+                                        </ComboBox>
+                                        <TextBlock Text="Default profile for new cards" Foreground="#80FFFFFF" FontSize="11" Margin="0,0,0,4"/>
+                                        <ComboBox x:Name="DefaultProfileCombo" Foreground="#FFFFFF" Margin="0,0,0,12"
+                                                  SelectionChanged="DefaultProfileCombo_SelectionChanged">
+                                            <ComboBoxItem Content="default" Tag="default"/>
+                                            <ComboBoxItem Content="work" Tag="work"/>
+                                            <ComboBoxItem Content="personal" Tag="personal"/>
+                                        </ComboBox>
+
+                                        <CheckBox x:Name="BlockTrackersToggle" Content="Block common trackers/ads (WebView2 filter)" Margin="0,0,0,8" Foreground="#FFFFFF"
+                                                  Checked="IntegrationToggle_Changed" Unchecked="IntegrationToggle_Changed"/>
+                                        <CheckBox x:Name="SuspendOffscreenToggle" Content="Suspend WebViews far off-screen" Margin="0,0,0,8" Foreground="#FFFFFF"
+                                                  Checked="IntegrationToggle_Changed" Unchecked="IntegrationToggle_Changed"/>
+                                        <CheckBox x:Name="TimeMachineToggle" Content="Time Machine snapshots on auto-save" Margin="0,0,0,12" Foreground="#FFFFFF"
+                                                  Checked="IntegrationToggle_Changed" Unchecked="IntegrationToggle_Changed"/>
+
+                                        <TextBlock Text="Time Machine" FontWeight="Medium" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                        <Slider x:Name="TimeMachineSlider" Minimum="0" Maximum="0" Value="0" TickFrequency="1" IsSnapToTickEnabled="True"
+                                                Margin="0,0,0,4" ValueChanged="TimeMachineSlider_ValueChanged"/>
+                                        <TextBlock x:Name="TimeMachineLabel" Text="No snapshots yet" Foreground="#60FFFFFF" FontSize="11" Margin="0,0,0,8"/>
+                                        <Button Content="Restore selected snapshot" Click="RestoreTimeMachineSnapshot_Click"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#00D9FF" BorderBrush="#00D9FF"
+                                                HorizontalAlignment="Stretch" Margin="0,0,0,16"/>
+
+                                        <TextBlock Text="Bookmarks file" FontWeight="Medium" Foreground="#FFFFFF" Margin="0,0,0,8"/>
+                                        <Button Content="Import bookmarks (HTML)" Click="ImportBookmarksHtml_Click" Margin="0,0,0,6"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#00D9FF" BorderBrush="#00D9FF" HorizontalAlignment="Stretch"/>
+                                        <Button Content="Export bookmarks (HTML)" Click="ExportBookmarksHtml_Click" Margin="0,0,0,16"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#00D9FF" BorderBrush="#00D9FF" HorizontalAlignment="Stretch"/>
+
+                                        <TextBlock Text="Share layout (JSON)" FontWeight="Medium" Foreground="#FFFFFF" Margin="0,0,0,8"/>
+                                        <Button Content="Export canvas for sharing…" Click="ExportShareLayout_Click" Margin="0,0,0,16"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#00D9FF" BorderBrush="#00D9FF" HorizontalAlignment="Stretch"/>
+
+                                        <TextBlock Text="Workspace portal card" FontWeight="Medium" Foreground="#FFFFFF" Margin="0,0,0,8"/>
+                                        <Button Content="New portal card (opens .sowser / .json)…" Click="CreatePortalCard_Click"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#00D9FF" BorderBrush="#00D9FF"
+                                                HorizontalAlignment="Stretch" Margin="0,0,0,16"/>
+
+                                        <TextBlock Text="Toolbar quick links" FontWeight="Medium" Foreground="#FFFFFF" Margin="0,0,0,8"/>
+                                        <TextBox x:Name="QuickLinkTitleInput" materialDesign:HintAssist.Hint="Title" Foreground="#FFFFFF" Margin="0,0,0,6"/>
+                                        <TextBox x:Name="QuickLinkUrlInput" materialDesign:HintAssist.Hint="https://…" Foreground="#FFFFFF" Margin="0,0,0,6"/>
+                                        <Button Content="Add quick link" Click="AddCustomQuickLink_Click" Margin="0,0,0,8"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#00D9FF" BorderBrush="#00D9FF" HorizontalAlignment="Stretch"/>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                        <!-- Canvas -->
+                        <Grid Grid.Column="1">
+                            <!-- ── Feature #9: Canvas Background (styled by code-behind) ── -->
+                            <Border x:Name="CanvasBackground" Background="#0A0A0F"/>
+                            <!-- Scrollable Canvas -->
+                        <ScrollViewer x:Name="CanvasScrollViewer"
+                                      HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                      Background="Transparent"
+                                      PanningMode="Both"
+                                      PreviewMouseWheel="CanvasScrollViewer_PreviewMouseWheel"
+                                      PreviewMouseDown="CanvasScrollViewer_PreviewMouseDown"
+                                      PreviewMouseMove="CanvasScrollViewer_PreviewMouseMove"
+                                      PreviewMouseUp="CanvasScrollViewer_PreviewMouseUp">
+                            
+                            <Grid x:Name="CanvasContainer">
+                                <!-- Scaled layer for connections and grid -->
+                                <Grid>
+                                    <Grid.LayoutTransform>
+                                        <ScaleTransform x:Name="CanvasScale" ScaleX="1" ScaleY="1"/>
+                                    </Grid.LayoutTransform>
+                                    
+                                    <!-- Connection Lines Canvas -->
+                                    <Canvas x:Name="ConnectionsCanvas" Width="3000" Height="2000"/>
+                                </Grid>
+                                
+                                <!-- Unscaled layer for cards - positioned manually based on zoom -->
+                                <Canvas x:Name="CardsCanvas" Width="3000" Height="2000" Background="Transparent">
+                                    <Canvas.LayoutTransform>
+                                        <ScaleTransform x:Name="CardsCanvasScale" ScaleX="1" ScaleY="1"/>
+                                    </Canvas.LayoutTransform>
+                                </Canvas>
+                            </Grid>
+                        </ScrollViewer>
+                        
+                        <!-- Pinned Content Canvas Overlay -->
+                        <Canvas x:Name="PinnedCanvas" IsHitTestVisible="True" ClipToBounds="True"/>
+
+                        <!-- Time Machine Slider Removed -->
+
+
+
+                        <!-- Toast Notification Overlay -->
+                        <Border x:Name="ToastPanel" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,80,0,0"
+                                Background="#DD111122" BorderBrush="#00FF88" BorderThickness="1" CornerRadius="10" Padding="20,10"
+                                Visibility="Collapsed" Panel.ZIndex="300">
+                            <TextBlock x:Name="ToastText" Foreground="White" FontWeight="Bold" FontSize="14"/>
+                        </Border>
+
+                        <!-- Floating Zoom Controls & MiniMap -->
+                        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16">
+                            
+                            <!-- Mini Map HUD -->
+                            <Border CornerRadius="8" Width="180" Height="120" Margin="0,0,0,16"
+                                    Background="#40000000" BorderBrush="#30FFFFFF" BorderThickness="1" ClipToBounds="True">
+                                <Canvas x:Name="MiniMapCanvas" Background="Transparent"
+                                        MouseLeftButtonDown="MiniMapCanvas_MouseLeftButtonDown"
+                                        Cursor="Hand" ToolTip="Click to navigate"/>
+                            </Border>
+
+                            <Border CornerRadius="12" HorizontalAlignment="Right"
+                                    Background="#30FFFFFF" BorderBrush="#40FFFFFF" BorderThickness="1">
+                                <StackPanel Orientation="Horizontal" Margin="4">
+                                    <Button Click="ZoomOut_Click" ToolTip="Zoom Out"
+                                            Style="{StaticResource MaterialDesignIconButton}"
+                                            Width="32" Height="32" Foreground="#CCFFFFFF">
+                                        <materialDesign:PackIcon Kind="Minus" Width="18" Height="18"/>
+                                    </Button>
+                                    <Border Width="50">
+                                        <TextBlock x:Name="ZoomIndicator" Text="100%" 
+                                                   FontSize="12" Foreground="#CCFFFFFF"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   MouseLeftButtonDown="ZoomIndicator_Click" Cursor="Hand"
+                                                   ToolTip="Click to reset"/>
+                                    </Border>
+                                    <Button Click="ZoomIn_Click" ToolTip="Zoom In"
+                                            Style="{StaticResource MaterialDesignIconButton}"
+                                            Width="32" Height="32" Foreground="#CCFFFFFF">
+                                        <materialDesign:PackIcon Kind="Plus" Width="18" Height="18"/>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+        
+        <!-- Expanded Card Overlay (covers the main content area) -->
+        <Grid x:Name="ExpandedCardOverlay" Grid.Column="1" Visibility="Collapsed">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#1a1a2e" Offset="0"/>
+                    <GradientStop Color="#16213e" Offset="0.5"/>
+                    <GradientStop Color="#0f3460" Offset="1"/>
+                </LinearGradientBrush>
+            </Grid.Background>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Header with close button -->
+            <Border Grid.Row="0" Background="#20FFFFFF" BorderBrush="#30FFFFFF" BorderThickness="0,0,0,1" Padding="12,8">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Web" Width="18" Height="18" Foreground="#80FFFFFF" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock x:Name="ExpandedCardUrl" FontSize="13" Foreground="#FFFFFF" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                    <Button HorizontalAlignment="Right" Click="CloseExpandedCard_Click"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            Width="32" Height="32" Foreground="#CCFFFFFF" ToolTip="Close (Esc)">
+                        <materialDesign:PackIcon Kind="Close" Width="20" Height="20"/>
+                    </Button>
+                </Grid>
+            </Border>
+            
+            <!-- WebView2 Content -->
+            <wv2:WebView2 x:Name="ExpandedWebView" Grid.Row="1"/>
+        </Grid>
+
+        <!-- ── Feature #7: Command Palette Overlay (Ctrl+K) ── -->
+        <Grid x:Name="CommandPaletteOverlay" Grid.Column="1" Visibility="Collapsed" Panel.ZIndex="600">
+            <Grid.Background><SolidColorBrush Color="#000000" Opacity="0.7"/></Grid.Background>
+            <Border HorizontalAlignment="Center" VerticalAlignment="Top"
+                    Margin="0,80,0,0" Width="560" CornerRadius="14"
+                    Background="#0C0C14" BorderBrush="#40FFFFFF" BorderThickness="1">
+                <Border.Effect>
+                    <DropShadowEffect Color="#000000" BlurRadius="40" ShadowDepth="12" Opacity="0.9"/>
+                </Border.Effect>
+                <StackPanel>
+                    <!-- Search Input -->
+                    <Border Background="#15FFFFFF" CornerRadius="14,14,0,0" Padding="16,12">
+                        <Grid>
+                            <materialDesign:PackIcon Kind="Magnify" Width="20" Height="20"
+                                                     VerticalAlignment="Center" Foreground="#60FFFFFF"/>
+                            <TextBox x:Name="CommandPaletteInput"
+                                     Margin="30,0,0,0" Background="Transparent" BorderThickness="0"
+                                     Foreground="#FFFFFF" CaretBrush="#FFFFFF" FontSize="15"
+                                     materialDesign:HintAssist.Hint="Search cards, history, bookmarks..."
+                                     materialDesign:HintAssist.Foreground="#50FFFFFF"
+                                     TextChanged="CommandPaletteInput_TextChanged"
+                                     KeyDown="CommandPaletteInput_KeyDown"/>
+                        </Grid>
+                    </Border>
+                    <!-- Results -->
+                    <Border BorderBrush="#20FFFFFF" BorderThickness="0,1,0,0">
+                        <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto">
+                            <StackPanel x:Name="CommandPaletteResults" Margin="6,6,6,6"/>
+                        </ScrollViewer>
+                    </Border>
+                    <!-- Footer hint -->
+                    <Border Padding="16,8" BorderBrush="#15FFFFFF" BorderThickness="0,1,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="↵ open card" Foreground="#40FFFFFF" FontSize="11" Margin="0,0,16,0"/>
+                            <TextBlock Text="↑↓ navigate" Foreground="#40FFFFFF" FontSize="11" Margin="0,0,16,0"/>
+                            <TextBlock Text="Esc close" Foreground="#40FFFFFF" FontSize="11"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ── Feature #6: Keyboard Shortcuts Panel (?) ── -->
+        <Grid x:Name="ShortcutsOverlay" Grid.Column="1" Visibility="Collapsed" Panel.ZIndex="601">
+            <Grid.Background><SolidColorBrush Color="#000000" Opacity="0.75"/></Grid.Background>
+            <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Width="480" CornerRadius="16"
+                    Background="#0D0D18" BorderBrush="#35FFFFFF" BorderThickness="1">
+                <Border.Effect>
+                    <DropShadowEffect Color="#000000" BlurRadius="40" ShadowDepth="10" Opacity="0.9"/>
+                </Border.Effect>
+                <StackPanel Margin="24">
+                    <Grid Margin="0,0,0,16">
+                        <TextBlock Text="⌨ Keyboard Shortcuts" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <Button HorizontalAlignment="Right" Click="CloseShortcuts_Click"
+                                Style="{StaticResource MaterialDesignIconButton}" Width="32" Height="32" Foreground="#80FFFFFF">
+                            <materialDesign:PackIcon Kind="Close" Width="16" Height="16"/>
+                        </Button>
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <TextBlock Text="CANVAS" FontSize="10" FontWeight="Bold" Foreground="#40FFFFFF" Margin="0,0,0,8"/>
+                            <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="New Browser Card" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+T" HorizontalAlignment="Right" Foreground="#00D9FF" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                            <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="New Sticky Note" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+Shift+N" HorizontalAlignment="Right" Foreground="#00D9FF" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                            <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="Command Palette" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+K" HorizontalAlignment="Right" Foreground="#00D9FF" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                            <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="Fit All Cards" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+Shift+F" HorizontalAlignment="Right" Foreground="#00D9FF" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                            <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="Reset View" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+0" HorizontalAlignment="Right" Foreground="#00D9FF" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                            <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="Zoom In" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+Plus" HorizontalAlignment="Right" Foreground="#00D9FF" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                            <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="Zoom Out" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+Minus" HorizontalAlignment="Right" Foreground="#00D9FF" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                            <TextBlock Text="APP" FontSize="10" FontWeight="Bold" Foreground="#40FFFFFF" Margin="0,0,0,8"/>
+                            <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="Shortcuts Help" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="?" HorizontalAlignment="Right" Foreground="#FFD93D" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                            <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="Bookmarks" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+B" HorizontalAlignment="Right" Foreground="#FFD93D" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                            <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="History" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+H" HorizontalAlignment="Right" Foreground="#FFD93D" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                            <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="Downloads" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+J" HorizontalAlignment="Right" Foreground="#FFD93D" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                            <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="Save Workspace" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+S" HorizontalAlignment="Right" Foreground="#FFD93D" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                            <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="Load Workspace" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+O" HorizontalAlignment="Right" Foreground="#FFD93D" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                            <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="Toggle Main Menu" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Alt+M" HorizontalAlignment="Right" Foreground="#FFD93D" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                        </StackPanel>
+                    </Grid>
+                    <Border Height="1" Background="#20FFFFFF" Margin="0,16,0,12"/>
+                    <TextBlock Text="Space + Drag to pan the canvas" Foreground="#50FFFFFF" FontSize="11" HorizontalAlignment="Center"/>
+                    <StackPanel Margin="0,12,0,0">
+                        <TextBlock Text="FIND &amp; FOCUS" FontSize="10" FontWeight="Bold" Foreground="#40FFFFFF" Margin="0,0,0,6"/>
+                        <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="Find on canvas" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+Shift+F" HorizontalAlignment="Right" Foreground="#00D9FF" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                        <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="Cycle card focus" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+Tab" HorizontalAlignment="Right" Foreground="#00D9FF" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                        <StackPanel Margin="0,0,0,6"><Grid><TextBlock Text="Undo last card action" Foreground="#D0FFFFFF" FontSize="12"/><TextBlock Text="Ctrl+Z" HorizontalAlignment="Right" Foreground="#00D9FF" FontSize="12" FontWeight="Medium"/></Grid></StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid x:Name="GlobalFindOverlay" Grid.Column="1" Visibility="Collapsed" Panel.ZIndex="602">
+            <Grid.Background><SolidColorBrush Color="#000000" Opacity="0.65"/></Grid.Background>
+            <Border Background="Transparent" MouseLeftButtonDown="GlobalFindBackdrop_MouseDown"/>
+            <Border HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,96,0,0" Width="480" CornerRadius="12"
+                    Background="#0C0C14" BorderBrush="#40FFFFFF" BorderThickness="1" MouseLeftButtonDown="GlobalFindInner_MouseDown">
+                <StackPanel Margin="12">
+                    <TextBlock Text="Find on canvas" Foreground="#FFFFFF" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBox x:Name="GlobalFindInput" Foreground="#FFFFFF" CaretBrush="#FFFFFF"
+                             materialDesign:HintAssist.Hint="Filter by title or URL…"
+                             materialDesign:HintAssist.Foreground="#50FFFFFF"
+                             TextChanged="GlobalFindInput_TextChanged" KeyDown="GlobalFindInput_KeyDown"/>
+                    <ListBox x:Name="GlobalFindList" MaxHeight="320" Margin="0,8,0,0" Background="Transparent"
+                             Foreground="#FFFFFF" MouseDoubleClick="GlobalFindList_MouseDoubleClick"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,53 @@
+# Build results
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options
+.vs/
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+
+# Build Results
+*.exe
+*.dll
+*.pdb
+*.cache
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Visual Studio temp files
+*.tmp
+*.temp
+*_wpftmp.csproj
+*_wpftmp.AssemblyInfo.cs
+*_wpftmp.GeneratedMSBuildEditorConfig.editorconfig
+*_wpftmp.GlobalUsings.g.cs
+
+# MSBuild Binary and Structured Log
+*.binlog
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
