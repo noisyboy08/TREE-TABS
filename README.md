@@ -22,9 +22,10 @@ Pan, zoom, group, and connect ideas the way you think — powered by **WPF** and
 
 ## Demo
 
-<video src="Tree%20Taps%20.mp4" width="100%" controls></video>
+<!-- GitHub’s README renderer usually needs an absolute raw URL; relative paths often show no player. -->
+<video src="https://raw.githubusercontent.com/noisyboy08/TREE-TABS/main/Tree%20Taps%20.mp4" width="100%" controls playsinline preload="metadata"></video>
 
-[Download the Video](./Tree%20Taps%20.mp4)
+[Download the demo video](https://raw.githubusercontent.com/noisyboy08/TREE-TABS/main/Tree%20Taps%20.mp4) · [File in repo](./Tree%20Taps%20.mp4)
 
 ---
 
