@@ -45,6 +45,9 @@ artifacts/
 # MSBuild Binary and Structured Log
 *.binlog
 
+# Local full demo export (committed assets: demo.mp4, demo.gif)
+Tree Taps .mp4
+
 # User-specific files
 *.rsuser
 *.suo

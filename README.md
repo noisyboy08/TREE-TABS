@@ -22,10 +22,18 @@ Pan, zoom, group, and connect ideas the way you think — powered by **WPF** and
 
 ## Demo
 
-<!-- GitHub’s README renderer usually needs an absolute raw URL; relative paths often show no player. -->
-<video src="https://raw.githubusercontent.com/noisyboy08/TREE-TABS/main/Tree%20Taps%20.mp4" width="100%" controls playsinline preload="metadata"></video>
+GitHub’s README **does not show an HTML `<video>` player** for files stored in the repo (those tags are removed for security). The preview below is an **animated GIF** so the walkthrough plays **inline on this page**; for full quality and audio, open **`demo.mp4`**.
 
-[Download the demo video](https://raw.githubusercontent.com/noisyboy08/TREE-TABS/main/Tree%20Taps%20.mp4) · [File in repo](./Tree%20Taps%20.mp4)
+![Sowser demo walkthrough (animated preview)](demo.gif)
+
+**Full demo (with audio):** [demo.mp4](./demo.mp4) — click to open or download from the file view.
+
+<details>
+<summary>Advanced: inline MP4 on GitHub only</summary>
+
+To get GitHub’s own video player in the README, edit this file on **github.com**, drag **`demo.mp4`** into the editor, and keep the URL GitHub inserts (it starts with `https://user-images.githubusercontent.com/` or `https://github.com/user-attachments/assets/`). That URL renders as a player; repo file URLs do not.
+
+</details>
 
 ---
 
