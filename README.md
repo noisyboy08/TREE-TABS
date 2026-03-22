@@ -24,9 +24,7 @@ Pan, zoom, group, and connect ideas the way you think — powered by **WPF** and
 
 <video src="Tree%20Taps%20.mp4" width="100%" controls></video>
 
-[Click here to download the video if it doesn't play](./Tree%20Taps%20.mp4)
-
-**Video file:** GitHub allows at most **100 MB** per file. If `Tree Taps .mp4` is larger, the upload can fail or the README player may not work—compress the video, use [Git LFS](https://git-lfs.com/), or host the clip elsewhere (e.g. YouTube) and link it here instead.
+[Download the Video](./Tree%20Taps%20.mp4)
 
 ---
 
