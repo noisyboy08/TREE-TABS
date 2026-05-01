@@ -1,6 +1,6 @@
 <div align="center">
 
-# Sowser
+# Tree-Tabs
 
 ### *Spatial browsing — your tabs live on a canvas, not in a queue.*
 
