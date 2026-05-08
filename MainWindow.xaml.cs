@@ -48,6 +48,9 @@ namespace Sowser
 
         // Settings (persisted via AppSettingsStore)
         private AppSettings _settings = AppSettingsStore.Load();
+        private GemmaSettings _gemmaSettings;
+        private GemmaService _gemmaService;
+        private GemmaOrganizeService _organizeService;
         private readonly string[] _searchEngines = {
             "https://www.google.com/search?q=",
             "https://www.bing.com/search?q=",
@@ -106,6 +109,9 @@ namespace Sowser
         public MainWindow()
         {
             InitializeComponent();
+            _gemmaSettings = _settings.GemmaSettings ??= new GemmaSettings();
+            _gemmaService = new GemmaService(_gemmaSettings);
+            _organizeService = new GemmaOrganizeService(_gemmaService);
             AppServices.BlockTrackers = _settings.BlockTrackers;
             InitializeAutoSave();
             InitGlobalShortcuts();
@@ -1854,58 +1860,47 @@ namespace Sowser
         
         private async void AIOrganize_Click(object sender, RoutedEventArgs e)
         {
-             if (_cards.Count < 2) 
-             {
-                 ShowToast("Not enough cards to AI sort.");
-                 return;
-             }
-             
-             ShowToast("AI Semantic Sorting Active...");
-             await System.Threading.Tasks.Task.Delay(800); // Simulate API classification
-             
-             // Simple deterministic classification logic for the sake of the demonstration
-             var topics = new Dictionary<string, List<BrowserCard>>();
-             foreach (var card in _cards.Values)
-             {
-                 string url = card.CurrentUrl.ToLower();
-                 string title = card.CurrentTitle.ToLower();
-                 
-                 string topicCategory = "General";
-                 
-                 if (url.Contains("youtube") || title.Contains("video") || url.Contains("netflix")) topicCategory = "Media";
-                 else if (url.Contains("github") || title.Contains("code") || url.Contains("stackoverflow")) topicCategory = "Development";
-                 else if (url.Contains("google") || title.Contains("search")) topicCategory = "Search";
-                 
-                 if (!topics.ContainsKey(topicCategory)) topics[topicCategory] = new List<BrowserCard>();
-                 topics[topicCategory].Add(card);
-             }
-             
-             // Animate sorting spatially
-             double startX = 0;
-             double startY = 0;
-             int colorIndex = 0;
-             string[] glowColors = { "#00D9FF", "#B233FF", "#FF3366", "#33FF66" };
-             
-             foreach (var topic in topics)
-             {
-                 double currentY = startY;
-                 foreach (var card in topic.Value)
-                 {
-                     Canvas.SetLeft(card, startX);
-                     Canvas.SetTop(card, currentY);
-                     currentY += card.ActualHeight + 50;
-                     
-                     // Force update visually based on category clustering
-                     card.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(glowColors[colorIndex % glowColors.Length]));
-                 }
-                 startX += 800; // Move to next column for next Topic
-                 colorIndex++;
-             }
-             
-             UpdateAllConnectionLines();
-             ShowToast("AI spatially organized your workspace by Semantic Context!");
-             CenterViewport();
+            if (!_gemmaSettings.IsEnabled) { ShowToast("AI Organize is disabled in settings."); return; }
+            ShowToast("Analyzing tabs...");
+            var cards = GetAllBrowserCards();
+            if (cards.Count < 2) { ShowToast("Open at least 2 tabs to organize."); return; }
+            var groups = await _gemmaService.GetGroupsAsync(cards);
+            if (groups.Count == 0) { ShowToast("Could not get groups - check Ollama is running."); return; }
+
+            foreach (var group in groups)
+            {
+                var existing = _groups.FirstOrDefault(g => string.Equals(g.GroupName, group.GroupName, StringComparison.OrdinalIgnoreCase));
+                if (existing != null)
+                {
+                    existing.Color = group.Color;
+                    existing.Urls = group.Urls;
+                    group.Id = existing.Id;
+                    group.CardIds = existing.CardIds;
+                }
+                else
+                {
+                    _groups.Add(group);
+                }
+
+                group.CardIds.Clear();
+                foreach (var card in _cards.Values.Where(c => group.Urls.Contains(c.CurrentUrl, StringComparer.OrdinalIgnoreCase)))
+                {
+                    group.CardIds.Add(card.CardId);
+                }
+            }
+
+            _organizeService.OrganizeCanvas(_cards.Values, groups);
+            RefreshGroupPanel();
+            UpdateAllConnectionLines();
+            UpdateCanvasSize();
+            ShowToast($"Organized into {groups.Count} groups!");
         }
+
+        private List<CardInfo> GetAllBrowserCards()
+            => _cards.Values
+                .Select(c => new CardInfo(string.IsNullOrWhiteSpace(c.CurrentTitle) ? c.CurrentUrl : c.CurrentTitle, c.CurrentUrl))
+                .Where(c => !string.IsNullOrWhiteSpace(c.Url))
+                .ToList();
 
         private void QuickLink_Click(object sender, RoutedEventArgs e)
         {

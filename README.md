@@ -37,6 +37,345 @@ To get GitHub’s own video player in the README, edit this file on **github.com
 
 ---
 
+## Deep Guide
+
+This README is meant to explain Sowser at three levels: what the app is, how people use it, and how the codebase is organized. Sowser is not a normal tab manager. It is a native Windows workspace where browsing becomes spatial: pages are live objects on a canvas, not entries hidden behind a tab strip.
+
+### Product Idea
+
+Sowser is designed for moments where context matters:
+
+- Researching a topic across many sources.
+- Comparing products, docs, papers, dashboards, or search results.
+- Planning a project with references, notes, and related links visible together.
+- Debugging across issue trackers, documentation, logs, and code search.
+- Learning a subject by arranging sources into clusters.
+- Keeping a visual trail of how one page led to another.
+
+The core bet is that people remember space well. If a user places documentation on the left, videos on the right, notes below, and related sources in a colored group, that layout becomes part of the work. Sowser tries to preserve that mental map.
+
+---
+
+## Core Concepts
+
+| Concept | Meaning |
+|:--|:--|
+| **Canvas** | The main spatial surface. Browser cards, image clips, notes, and connections live here. |
+| **Browser card** | A draggable, resizable live browser surface backed by Microsoft Edge WebView2. |
+| **Workspace** | The saved state of the canvas: cards, positions, sizes, groups, connections, bookmarks, zoom, viewport, and theme. |
+| **Group** | A named color cluster used to organize related cards. |
+| **Connection** | A visual relationship between two cards, drawn as a line on the canvas. |
+| **Profile** | A WebView2 storage context, useful for separating sessions or identities. |
+| **Read later** | A persistent local list of links the user wants to return to. |
+| **Image clip** | A captured preview of a card placed onto the canvas as a lightweight visual reference. |
+| **AI Smart Organize** | A Gemma-powered feature that groups open cards by topic and lays them out into columns. |
+
+---
+
+## How The App Works
+
+At runtime, `MainWindow` owns the workspace. It manages the canvas, creates cards, wires events, updates connection lines, saves and loads workspaces, controls side panels, handles keyboard shortcuts, and coordinates feature services.
+
+The canvas is WPF-based. Cards are added directly to `CardsCanvas`, and their positions are stored with `Canvas.SetLeft` and `Canvas.SetTop`. When a card moves or resizes, the app updates connection lines and recalculates the scrollable canvas size so the workspace can keep growing.
+
+Browser content is provided by WebView2. Each `BrowserCard` wraps a WebView2 control and exposes browser state such as current URL and title. The parent window listens for card events such as navigation, close, movement, download start, link opening, group assignment, and screenshot capture.
+
+Workspace state is serialized to JSON. A saved workspace can recreate the layout later by rebuilding cards, groups, connections, bookmarks, viewport position, zoom level, and background theme.
+
+---
+
+## Main User Workflows
+
+### Create A Spatial Browsing Session
+
+1. Open a browser card with `Ctrl+T` or the URL/search bar.
+2. Search or navigate normally inside the card.
+3. Drag the card to a meaningful place on the canvas.
+4. Add more cards for related pages.
+5. Resize important cards so they are easier to scan.
+6. Use zoom and fit-all to move between detail view and overview.
+
+### Organize A Research Layout
+
+1. Put related pages near each other.
+2. Assign groups manually, or use **AI Smart Organize**.
+3. Add sticky notes beside important clusters.
+4. Connect cards that have a relationship.
+5. Capture screenshots as image clips when a page should become a static reference.
+6. Save the workspace as a `.sowser` file.
+
+### Recover Or Continue Work
+
+1. Use auto-save/session restore for recent work.
+2. Load a saved `.sowser` file when returning to a project.
+3. Use global find to jump to a specific card by title or URL.
+4. Use fit-all or the minimap if the canvas has grown large.
+
+---
+
+## AI Smart Organize
+
+Sowser includes a Gemma-powered organization workflow. It is designed to work locally first with Ollama and `gemma3:4b`.
+
+When the user clicks **AI Smart Organize**, the app:
+
+1. Collects every open browser card title and URL.
+2. Sends the list to the configured model.
+3. Requests strict JSON output.
+4. Parses model output into groups.
+5. Creates or updates visual card groups.
+6. Moves grouped cards into vertical columns.
+7. Applies group colors to matching cards.
+8. Leaves unmatched cards in place and clears their group color.
+
+### Default Ollama Setup
+
+```text
+Endpoint: http://localhost:11434
+Model:    gemma3:4b
+```
+
+Install Ollama, pull the model, and start the local server:
+
+```powershell
+ollama pull gemma3:4b
+ollama serve
+```
+
+Then open at least two cards in Sowser and run **AI Smart Organize**.
+
+### Gemini API Fallback
+
+The code also supports a Gemini API fallback using:
+
+```text
+Model: gemma-3-4b-it
+API:   generativelanguage.googleapis.com
+```
+
+The fallback is controlled by `GemmaSettings`. By default, local Ollama is enabled and the Gemini API key is empty.
+
+### Failure Behavior
+
+The AI path is intentionally defensive:
+
+- HTTP timeout is set to 30 seconds.
+- Network errors are caught.
+- Malformed model output is caught.
+- Markdown code fences are stripped before parsing.
+- Exceptions are written to `Debug`.
+- The app shows a toast instead of crashing.
+
+---
+
+## Architecture
+
+| Area | Files | Responsibility |
+|:--|:--|:--|
+| **Application entry** | `App.xaml`, `App.xaml.cs` | Starts the WPF application and loads global resources. |
+| **Main shell** | `MainWindow.xaml`, `MainWindow.xaml.cs` | Window chrome, canvas, cards, shortcuts, panels, save/load, minimap, zoom, connections. |
+| **Feature pack** | `MainWindow.FeaturePack.cs` | Additional feature handlers and integrations that extend the main window. |
+| **Controls** | `Controls/` | Browser cards, image clips, sticky notes, and reusable UI pieces. |
+| **Models** | `Models/` | Serializable data structures for settings, cards, groups, workspaces, history, downloads, and AI settings. |
+| **Services** | `Services/` | Persistence, WebView profile management, tracker blocking, bookmark IO, Gemma calls, and AI layout organization. |
+| **Website** | `website/` | Static marketing/download page. This is separate from the desktop app. |
+
+### Important Runtime Objects
+
+| Object | Role |
+|:--|:--|
+| `_cards` | Dictionary of live `BrowserCard` controls by card id. |
+| `_connections` | List of saved relationships between cards. |
+| `_groups` | List of named color groups. |
+| `_settings` | Current app settings loaded from disk. |
+| `CardsCanvas` | WPF canvas that hosts live cards and clips. |
+| `ConnectionsCanvas` | Overlay canvas that draws relationship lines. |
+| `CanvasScrollViewer` | Scroll container for navigating the large workspace. |
+
+---
+
+## Data Model
+
+### App Settings
+
+Settings are stored through `AppSettingsStore` and include:
+
+- Default search engine.
+- Theme and canvas background.
+- Auto-save enabled state.
+- Auto-save interval.
+- Session restore mode.
+- Tracker blocking.
+- Offscreen card suspension.
+- Time Machine snapshot preference.
+- Default browser profile.
+- Read-later list.
+- Custom quick links.
+- Gemma settings.
+
+Default location:
+
+```text
+%AppData%\Sowser\appsettings.json
+```
+
+### Workspace State
+
+Workspace saves include:
+
+- Viewport X/Y.
+- Zoom level.
+- Cards.
+- Connections.
+- Bookmarks.
+- Groups.
+- Background theme.
+
+Each card state includes:
+
+- Card id.
+- X/Y position.
+- Width and height.
+- URL and title.
+- Group id.
+- Browser profile.
+- Portal metadata.
+
+### Groups
+
+Groups are represented by `CardGroup`. They contain:
+
+- Stable id.
+- Display name.
+- Hex color.
+- Assigned card ids.
+- AI-returned URL list when produced by Smart Organize.
+
+---
+
+## Build And Run
+
+From the repository root:
+
+```powershell
+dotnet restore
+dotnet build -c Release
+```
+
+Run the app from:
+
+```text
+bin\Release\net8.0-windows\Sowser.exe
+```
+
+For day-to-day development:
+
+```powershell
+dotnet build
+dotnet run
+```
+
+Or open `Sowser.sln` in Visual Studio or Rider and start the **Sowser** project.
+
+### Publish
+
+Framework-dependent build:
+
+```powershell
+dotnet publish -c Release -r win-x64 --self-contained false -o publish\win-x64
+```
+
+Self-contained build:
+
+```powershell
+dotnet publish -c Release -r win-x64 --self-contained true -o publish\win-x64-sc
+```
+
+Distribute the full publish folder, not only the `.exe`, because WebView2/WPF apps may require native runtime files and supporting folders.
+
+---
+
+## Requirements
+
+| Requirement | Details |
+|:--|:--|
+| **Operating system** | Windows 10 or Windows 11. |
+| **Development SDK** | .NET 8 SDK. |
+| **User runtime** | .NET 8 Desktop Runtime, unless using a self-contained publish. |
+| **Browser runtime** | Microsoft Edge WebView2 Evergreen Runtime. |
+| **Optional local AI** | Ollama with `gemma3:4b`. |
+
+---
+
+## Repository Layout
+
+```text
+TREE-TABS/
+|-- README.md
+|-- Sowser.sln
+|-- Sowser.csproj
+|-- App.xaml
+|-- App.xaml.cs
+|-- MainWindow.xaml
+|-- MainWindow.xaml.cs
+|-- MainWindow.FeaturePack.cs
+|-- Controls/
+|   |-- BrowserCard.xaml
+|   |-- BrowserCard.xaml.cs
+|   |-- ImageClipCard.xaml
+|   |-- ImageClipCard.xaml.cs
+|   |-- StickyNote.xaml
+|   `-- StickyNote.xaml.cs
+|-- Models/
+|   |-- AppSettings.cs
+|   |-- WorkspaceState.cs
+|   |-- CardState.cs
+|   |-- CardGroup.cs
+|   |-- GemmaSettings.cs
+|   `-- ...
+|-- Services/
+|   |-- AppSettingsStore.cs
+|   |-- WebViewProfileEnvironment.cs
+|   |-- TrackerBlocklist.cs
+|   |-- GemmaService.cs
+|   |-- GemmaOrganizeService.cs
+|   `-- ...
+|-- Helpers/
+|-- website/
+|-- publish/
+|-- demo.gif
+`-- demo.mp4
+```
+
+---
+
+## Troubleshooting
+
+| Problem | Check |
+|:--|:--|
+| Web pages do not render | Install or repair WebView2 Evergreen Runtime. |
+| Build shows `NU1900` | NuGet vulnerability metadata could not be fetched; this is usually a network/feed warning, not a compile error. |
+| AI organize fails | Make sure Ollama is running and `gemma3:4b` is pulled. |
+| AI organize is slow | The first model call may load the model into memory. Try again after the first request completes. |
+| Shortcuts do not fire | Focus may be inside a webpage. Click the app chrome or canvas and retry. |
+| Large workspace feels heavy | Enable offscreen suspension, tracker blocking, or convert less-needed pages to image clips. |
+| Loaded workspace has blank cards | The layout restored, but pages may require network access, login, or a compatible WebView2 session. |
+
+---
+
+## Development Notes
+
+- Target framework: `net8.0-windows`.
+- UI framework: WPF.
+- Browser engine: Microsoft Edge WebView2.
+- Existing packages should be preferred over new dependencies.
+- Keep model classes serializable.
+- Keep WPF canvas mutations on the UI thread.
+- Keep feature services small and focused.
+- Use `dotnet build` before submitting changes.
+
+---
+
 ## Why Sowser?
 
 Traditional browsers optimize for **one column of tabs**. Sowser optimizes for **space**: research layouts, comparison grids, mood boards, and deep dives where context matters. Each page is a **card** on an infinite canvas — drag, resize, zoom out for the big picture, zoom in for detail.

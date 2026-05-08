@@ -17,6 +17,7 @@ namespace Sowser.Models
         public bool SuspendOffscreenCards { get; set; } = true;
         public bool TimeMachineSnapshotsEnabled { get; set; } = true;
         public string DefaultBrowserProfile { get; set; } = "default";
+        public GemmaSettings GemmaSettings { get; set; } = new();
 
         public List<ReadLaterItem> ReadLater { get; set; } = new();
         public List<QuickLinkItem> CustomQuickLinks { get; set; } = new();

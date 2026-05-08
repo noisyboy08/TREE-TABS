@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Sowser.Models
 {
@@ -12,5 +13,15 @@ namespace Sowser.Models
         public string Name { get; set; } = "Group";
         public string Color { get; set; } = "#00D9FF"; // accent hex color
         public List<string> CardIds { get; set; } = new();
+
+        [JsonPropertyName("groupName")]
+        public string GroupName
+        {
+            get => Name;
+            set => Name = value;
+        }
+
+        [JsonPropertyName("urls")]
+        public List<string> Urls { get; set; } = new();
     }
 }

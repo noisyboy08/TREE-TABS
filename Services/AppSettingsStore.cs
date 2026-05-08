@@ -22,6 +22,7 @@ namespace Sowser.Services
                     {
                         s.ReadLater ??= new System.Collections.Generic.List<Models.ReadLaterItem>();
                         s.CustomQuickLinks ??= new System.Collections.Generic.List<Models.QuickLinkItem>();
+                        s.GemmaSettings ??= new GemmaSettings();
                         return s;
                     }
                 }
